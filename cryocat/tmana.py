@@ -166,16 +166,17 @@ def scores_extract_particles(
 
     # Create a list of tuples where each tuple is (coord, score) and sort it by score in descending order
     scored_coords = sorted(zip(s_ind.T, scores_map[s_ind[0], s_ind[1], s_ind[2]]), key=lambda x: x[1], reverse=True)
-    # Create a list of coords objects
-    list_of_coords = [a[0] for a in scored_coords]
-    # Create a list of scores, I assume it is a list of numbers
-    list_of_scores = [a[1] for a in scored_coords]
-    array_of_scores = np.array(list_of_scores)
-    filter = array_of_scores > threshold
-    filter = filter.tolist()
-    list_of_scores = list(compress(list_of_scores, filter))
-    list_of_coords = list(compress(list_of_coords, filter))
-    scored_coords = list(zip(list_of_coords, list_of_scores))
+    if local_maxima_peak_picking:
+        # Create a list of coords objects
+        list_of_coords = [a[0] for a in scored_coords]
+        # Create a list of scores, I assume it is a list of numbers
+        list_of_scores = [a[1] for a in scored_coords]
+        array_of_scores = np.array(list_of_scores)
+        filter = array_of_scores > threshold
+        filter = filter.tolist()
+        list_of_scores = list(compress(list_of_scores, filter))
+        list_of_coords = list(compress(list_of_coords, filter))
+        scored_coords = list(zip(list_of_coords, list_of_scores))
 
     # Build a KD-tree with the coordinates
     tree = KDTree([coord for coord, score in scored_coords])
