@@ -140,15 +140,11 @@ def scores_extract_particles(
         threshold = score_mean + sigma_threshold * score_std
 
     # Threshold and sort indices/scores
-    #if local_maxima_peak_picking is False:
-        t_idx1 = np.where(scores_map > threshold)
-    #else:
-        t_idx2 = peak_local_max(scores_map,min_distance=int((particle_diameter-1)/2))
-        t_idx2 = tuple((t_idx2[:, 0], t_idx2[:, 1]))
-
-    print(t_idx1)
-    print(t_idx2)
-    t_idx = t_idx2
+    if local_maxima_peak_picking is False:
+        t_idx = np.where(scores_map > threshold)
+    else:
+        t_idx = peak_local_max(scores_map,min_distance=int((particle_diameter-1)/2))
+        t_idx = tuple((t_idx[:, 0], t_idx[:, 1], t_idx[:, 2]))
 
     # original piece - not clear whether this is really working
     # if n_particles is not None:
