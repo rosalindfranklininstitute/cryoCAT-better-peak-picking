@@ -164,12 +164,14 @@ def scores_extract_particles(
         t_idx = np.where(scores_map > threshold)
     else:
         score_tensor_map = torch.from_numpy(scores_map)
+        score_tensor_map = score_tensor_map.cuda()
         pool = torch.nn.MaxPool3d(
             kernel_size=particle_diameter, padding=particle_diameter // 2, return_indices=True
-        )
+        ).cuda()
         _, indices = pool(score_tensor_map.reshape(1, 1, *score_tensor_map.shape))
         coordinates = unravel_index(indices.reshape(-1), score_tensor_map.shape)
         t_idx = transpose(torch.stack(coordinates))
+        t_idx = t_idx.detach().cpu().numpy()
         t_idx = tuple((t_idx[:, 0], t_idx[:, 1]))
 
     # original piece - not clear whether this is really working
