@@ -144,6 +144,7 @@ def scores_extract_particles(
         t_idx = np.where(scores_map > threshold)
     else:
         t_idx = peak_local_max(scores_map,min_distance=int((particle_diameter-1)/2))
+        t_idx = tuple((t_idx[:, 0], t_idx[:, 1]))
 
     # original piece - not clear whether this is really working
     # if n_particles is not None:
