@@ -15,8 +15,30 @@ from cryocat import cryomask
 
 from lmfit import models
 import skimage
+import torch
 from scipy.spatial import KDTree
 from sklearn.cluster import DBSCAN
+from itertools import compress
+
+
+def unravel_index(indices, shape):
+    strides = torch.cumprod(shape.flip(0), dim=0).flip(0)
+    strides = torch.cat(
+        (strides[1:], torch.from_numpy(np.asarray([1]))),
+    )
+    unraveled_coords = (indices.view(-1, 1) // strides.view(1, -1)) % shape.view(
+        1, -1
+    )
+    if unraveled_coords.size(0) == 1:
+        return (unraveled_coords[0, :],)
+    else:
+        return tuple(unraveled_coords.T)
+
+
+def transpose(arr, axes=None):
+    if axes is None:
+        axes = tuple(range(arr.ndim - 1, -1, -1))
+    return arr.permute(axes)
 
 
 def scores_extract_particles(
@@ -25,6 +47,7 @@ def scores_extract_particles(
     angles_list,
     tomo_id,
     particle_diameter,
+    local_maxima_peak_picking=False,
     object_id=None,
     scores_threshold=None,
     sigma_threshold=None,
@@ -51,6 +74,8 @@ def scores_extract_particles(
         Identifier for the tomogram from which particles are being extracted.
     particle_diameter : float
         Diameter of the particle to be used for extraction and clustering.
+    local_maxima_peak_picking : bool
+        Use local maxima peak picking and not thresholding to peak picks. Defaults to False.
     object_id : int, optional
         Identifier for the object within the tomogram. Defaults to None.
     scores_threshold : float, optional
@@ -135,7 +160,17 @@ def scores_extract_particles(
         threshold = score_mean + sigma_threshold * score_std
 
     # Threshold and sort indices/scores
-    t_idx = np.where(scores_map > threshold)
+    if local_maxima_peak_picking is False:
+        t_idx = np.where(scores_map > threshold)
+    else:
+        score_tensor_map = torch.from_numpy(scores_map)
+        pool = torch.nn.MaxPool3d(
+            kernel_size=particle_diameter, padding=particle_diameter // 2, return_indices=True
+        )
+        _, indices = pool(score_tensor_map.reshape(1, 1, *score_tensor_map.shape))
+        coordinates = unravel_index(indices.reshape(-1), score_tensor_map.shape)
+        t_idx = transpose(torch.stack(coordinates))
+        t_idx = tuple((t_idx[:, 0], t_idx[:, 1]))
 
     # original piece - not clear whether this is really working
     # if n_particles is not None:
@@ -157,6 +192,16 @@ def scores_extract_particles(
 
     # Create a list of tuples where each tuple is (coord, score) and sort it by score in descending order
     scored_coords = sorted(zip(s_ind.T, scores_map[s_ind[0], s_ind[1], s_ind[2]]), key=lambda x: x[1], reverse=True)
+    # Create a list of coords objects
+    list_of_coords = [a[0] for a in scored_coords]
+    # Create a list of scores, I assume it is a list of numbers
+    list_of_scores = [a[1] for a in scored_coords]
+    array_of_scores = np.array(list_of_scores)
+    filter = array_of_scores > threshold
+    filter = filter.tolist()
+    list_of_scores = list(compress(list_of_scores, filter))
+    list_of_coords = list(compress(list_of_coords, filter))
+    scored_coords = list(zip(list_of_coords, list_of_scores))
 
     # Build a KD-tree with the coordinates
     tree = KDTree([coord for coord, score in scored_coords])
