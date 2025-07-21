@@ -148,6 +148,7 @@ def scores_extract_particles(
 
     print(t_idx1)
     print(t_idx2)
+    t_idx = t_idx2
 
     # original piece - not clear whether this is really working
     # if n_particles is not None:
