@@ -186,15 +186,16 @@ def scores_extract_particles(
     remaining_coords = set(coord_to_score.keys())
     filtered_coords = []
 
-    for coord, score in scored_coords:
-        if tuple(coord) not in remaining_coords:
-            continue
-        filtered_coords.append((coord, score))
-        nearby_coords = tree.query_ball_point(coord, particle_diameter)
-        for nearby_coord in nearby_coords:
-            nearby_coord_tuple = tuple(scored_coords[nearby_coord][0])
-            if nearby_coord_tuple in remaining_coords and coord_to_score[nearby_coord_tuple] <= score:
-                remaining_coords.remove(nearby_coord_tuple)
+    if not local_maxima_peak_picking:
+        for coord, score in scored_coords:
+            if tuple(coord) not in remaining_coords:
+                continue
+            filtered_coords.append((coord, score))
+            nearby_coords = tree.query_ball_point(coord, particle_diameter)
+            for nearby_coord in nearby_coords:
+                nearby_coord_tuple = tuple(scored_coords[nearby_coord][0])
+                if nearby_coord_tuple in remaining_coords and coord_to_score[nearby_coord_tuple] <= score:
+                    remaining_coords.remove(nearby_coord_tuple)
 
     # Extract the coordinates from the filtered_coords list
     filtered_coords, filtered_scores = zip(*filtered_coords)
