@@ -196,6 +196,9 @@ def scores_extract_particles(
                 nearby_coord_tuple = tuple(scored_coords[nearby_coord][0])
                 if nearby_coord_tuple in remaining_coords and coord_to_score[nearby_coord_tuple] <= score:
                     remaining_coords.remove(nearby_coord_tuple)
+    else:
+        for coord, score in scored_coords:
+            filtered_coords.append((coord, score))
 
     # Extract the coordinates from the filtered_coords list
     filtered_coords, filtered_scores = zip(*filtered_coords)
