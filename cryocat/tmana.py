@@ -138,6 +138,7 @@ def scores_extract_particles(
         score_mean = scores_map.mean()
         score_std = scores_map.std(ddof=1)
         threshold = score_mean + sigma_threshold * score_std
+        print("Absolute Threshold:", threshold)
 
     # Threshold and sort indices/scores
     if local_maxima_peak_picking is False:
