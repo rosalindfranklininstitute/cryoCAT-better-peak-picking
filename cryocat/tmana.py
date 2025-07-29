@@ -155,9 +155,9 @@ def scores_extract_particles(
             scores_map_sqr = scores_map ** 2
             mean_kernel = np.ones((local_threshold_diameter, local_threshold_diameter, local_threshold_diameter))
             mean_kernel = mean_kernel / (mean_kernel.size)
-            local_score_mean = convolve(scores_map, mean_kernel, mode="same")
+            local_score_mean = convolve(scores_map, mean_kernel)
             local_score_mean_sqr = local_score_mean ** 2
-            local_mean_scores_map_sqr = convolve(scores_map_sqr, mean_kernel, mode="same")
+            local_mean_scores_map_sqr = convolve(scores_map_sqr, mean_kernel)
             local_score_std = np.sqrt(local_mean_scores_map_sqr - local_score_mean_sqr)
             local_threshold = local_score_mean + sigma_threshold * local_score_std
 
