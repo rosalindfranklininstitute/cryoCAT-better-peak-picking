@@ -19,6 +19,9 @@ from skimage.feature import peak_local_max
 from scipy.spatial import KDTree
 from sklearn.cluster import DBSCAN
 from itertools import compress
+from scipy.ndimage import convolve
+
+from docs.source.tutorials.tango_tutorials.TANGO_VLP import mean_distances_whole
 
 
 def scores_extract_particles(
@@ -28,6 +31,7 @@ def scores_extract_particles(
     tomo_id,
     particle_diameter,
     local_maxima_peak_picking=False,
+    local_threshold_diameter=None,
     object_id=None,
     scores_threshold=None,
     sigma_threshold=None,
@@ -56,6 +60,9 @@ def scores_extract_particles(
         Diameter of the particle to be used for extraction and clustering.
     local_maxima_peak_picking : bool
         Use local maxima peak picking and not thresholding to peak picks. Defaults to False.
+    local_threshold_diameter : int, optional
+        If not None it applies thresholding using local first order statistics of an area set by the attribute.
+        Defaults to None.
     object_id : int, optional
         Identifier for the object within the tomogram. Defaults to None.
     scores_threshold : float, optional
@@ -146,6 +153,15 @@ def scores_extract_particles(
     else:
         t_idx = peak_local_max(scores_map,min_distance=int((particle_diameter-1)/2))
         t_idx = tuple((t_idx[:, 0], t_idx[:, 1], t_idx[:, 2]))
+        if local_threshold_diameter is not None:
+            scores_map_sqr = scores_map ** 2
+            mean_kernel = np.ones((local_threshold_diameter, local_threshold_diameter, local_threshold_diameter))
+            mean_kernel = mean_kernel / (mean_kernel.size)
+            local_score_mean = convolve(scores_map, mean_kernel, mode="same")
+            local_score_mean_sqr = local_score_mean ** 2
+            local_mean_scores_map_sqr = convolve(scores_map_sqr, mean_kernel, mode="same")
+            local_score_std = np.sqrt(local_mean_scores_map_sqr - local_score_mean_sqr)
+            local_threshold = local_score_mean + sigma_threshold * local_score_std
 
     # original piece - not clear whether this is really working
     # if n_particles is not None:
@@ -168,12 +184,21 @@ def scores_extract_particles(
     # Create a list of tuples where each tuple is (coord, score) and sort it by score in descending order
     scored_coords = sorted(zip(s_ind.T, scores_map[s_ind[0], s_ind[1], s_ind[2]]), key=lambda x: x[1], reverse=True)
     if local_maxima_peak_picking:
+        if local_threshold_diameter is not None:
+            scored_stats = sorted(
+                zip(s_ind.T, local_threshold[s_ind[0], s_ind[1], s_ind[2]],),
+                key=lambda x: x[1], reverse=True)
+            list_of_thresholds = [a[1] for a in scored_stats]
         # Create a list of coords objects
         list_of_coords = [a[0] for a in scored_coords]
         # Create a list of scores, I assume it is a list of numbers
         list_of_scores = [a[1] for a in scored_coords]
         array_of_scores = np.array(list_of_scores)
-        filter = array_of_scores > threshold
+        if local_threshold_diameter is not None:
+            array_of_thresholds = np.array(list_of_thresholds)
+            filter = array_of_scores > array_of_thresholds
+        else:
+            filter = array_of_scores > threshold
         filter = filter.tolist()
         list_of_scores = list(compress(list_of_scores, filter))
         list_of_coords = list(compress(list_of_coords, filter))
