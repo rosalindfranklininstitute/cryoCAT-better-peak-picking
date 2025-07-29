@@ -196,11 +196,12 @@ def scores_extract_particles(
         array_of_scores = np.array(list_of_scores)
         if local_threshold_diameter is not None:
             array_of_thresholds = np.array(list_of_thresholds)
-            print("array_of_thresholds shape:", array_of_thresholds.shape)
             filter = array_of_scores > array_of_thresholds
         else:
             filter = array_of_scores > threshold
-        print("filter shape:", filter.shape)
+        if any(filter) is False:
+            print("All peaks excluded due to high thresholding. Please select a lower setting.")
+            return
         filter = filter.tolist()
         list_of_scores = list(compress(list_of_scores, filter))
         list_of_coords = list(compress(list_of_coords, filter))
