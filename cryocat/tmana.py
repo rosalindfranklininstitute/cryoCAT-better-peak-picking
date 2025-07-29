@@ -21,8 +21,6 @@ from sklearn.cluster import DBSCAN
 from itertools import compress
 from scipy.ndimage import convolve
 
-from docs.source.tutorials.tango_tutorials.TANGO_VLP import mean_distances_whole
-
 
 def scores_extract_particles(
     scores_map,
