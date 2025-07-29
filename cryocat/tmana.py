@@ -196,7 +196,7 @@ def scores_extract_particles(
         array_of_scores = np.array(list_of_scores)
         if local_threshold_diameter is not None:
             array_of_thresholds = np.array(list_of_thresholds)
-            print("list_of_thresholds shape:", list_of_thresholds.shape)
+            print("array_of_thresholds shape:", array_of_thresholds.shape)
             filter = array_of_scores > array_of_thresholds
         else:
             filter = array_of_scores > threshold
