@@ -19,7 +19,7 @@ from skimage.feature import peak_local_max
 from scipy.spatial import KDTree
 from sklearn.cluster import DBSCAN
 from itertools import compress
-from cupyx.scipy.signal import convolve
+from cupyx.scipy.ndimage import convolve
 import cupy as cp
 
 
@@ -155,9 +155,9 @@ def scores_extract_particles(
         if local_threshold_diameter is not None:
             mean_kernel = cp.ones((local_threshold_diameter, local_threshold_diameter, local_threshold_diameter))
             mean_kernel = mean_kernel / (mean_kernel.size)
-            local_score_mean = convolve(cp.asarray(scores_map), mean_kernel, mode="same")
+            local_score_mean = convolve(cp.array(scores_map), mean_kernel)
             local_threshold = np.sqrt(
-                convolve(cp.asarray(scores_map)**2, mean_kernel, mode="same") - ( local_score_mean ** 2 )
+                convolve(cp.asarray(scores_map)**2, mean_kernel) - ( local_score_mean ** 2 )
             )
             local_threshold = local_score_mean + sigma_threshold * local_threshold
             del local_score_mean
