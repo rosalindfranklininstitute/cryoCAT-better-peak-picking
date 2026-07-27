@@ -30,6 +30,7 @@ dependencies = [
     "dash_bootstrap_components>=2.0",
     "dash_ag_grid>=31.3.1",
     "networkx>=3.1",
+    "cupy-cuda12x>=14.1.1"
 ]
 classifiers = [
     "Intended Audience :: Science/Research",
