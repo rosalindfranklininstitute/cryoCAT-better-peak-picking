@@ -1,5 +1,5 @@
 # cryoCAT
-Contextual Analysis Tools for cryoET and subtomogram averaging
+Contextual Analysis Tools for cryoET and subtomogram averaging.
 
 # Documentation
 The documentation including tutorials and basic user guide can be found here: [cryocat.readthedocs.io](https://cryocat.readthedocs.io)
